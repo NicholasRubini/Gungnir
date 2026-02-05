@@ -137,6 +137,9 @@
             letter-spacing: 0.12em;
             text-transform: uppercase;
             text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: center;
         }
         .brand-mini:hover {
             color: var(--oro-runico);
@@ -2178,8 +2181,7 @@
             align-items: center;
             gap: 0.35rem;
         }
-        .panel-toggle,
-        .panel-drag {
+        .panel-toggle {
             width: 28px;
             height: 28px;
             display: inline-flex;
@@ -2202,16 +2204,6 @@
         .panel-toggle:hover {
             background: var(--oro-runico);
             color: #fff;
-        }
-        .panel-drag {
-            cursor: grab;
-        }
-        .panel-drag:active {
-            cursor: grabbing;
-        }
-        .panel-drag svg {
-            width: 16px;
-            height: 16px;
         }
         .panel-body {
             display: block;
@@ -4104,60 +4096,6 @@
             state.order.forEach(id => {
                 const panel = panelMap.get(id);
                 if (panel) setPanelCollapsed(panel, state.collapsed[id]);
-            });
-        }
-
-        function updatePanelOrderFromDom(groupName) {
-            const group = PANEL_GROUPS[groupName];
-            if (!group) return;
-            const container = document.querySelector(group.container);
-            if (!container) return;
-            const order = [...container.querySelectorAll(group.panelSelector)].map(panel => panel.dataset.panelId);
-            const state = getPanelState(groupName);
-            state.order = order;
-            savePanelState(groupName, state);
-        }
-
-        function initPanelDrag(groupName) {
-            const group = PANEL_GROUPS[groupName];
-            if (!group) return;
-            const container = document.querySelector(group.container);
-            if (!container || container.dataset.panelDragBound) return;
-            container.dataset.panelDragBound = '1';
-            let draggingPanel = null;
-
-            container.addEventListener('dragstart', e => {
-                const handle = e.target.closest('.panel-drag');
-                if (!handle) return;
-                const panel = handle.closest('.panel-card');
-                if (!panel) return;
-                draggingPanel = panel;
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', panel.dataset.panelId);
-                e.dataTransfer.setDragImage(panel, 20, 20);
-            });
-
-            container.addEventListener('dragover', e => {
-                if (!draggingPanel) return;
-                const target = e.target.closest('.panel-card');
-                if (!target || target === draggingPanel) return;
-                e.preventDefault();
-                const rect = target.getBoundingClientRect();
-                const before = e.clientY < rect.top + rect.height / 2;
-                container.insertBefore(draggingPanel, before ? target : target.nextSibling);
-            });
-
-            container.addEventListener('drop', e => {
-                if (!draggingPanel) return;
-                e.preventDefault();
-                updatePanelOrderFromDom(groupName);
-                draggingPanel = null;
-            });
-
-            container.addEventListener('dragend', () => {
-                if (!draggingPanel) return;
-                updatePanelOrderFromDom(groupName);
-                draggingPanel = null;
             });
         }
 

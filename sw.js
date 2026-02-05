@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gungnir-pwa-v14';
+const CACHE_NAME = 'gungnir-pwa-v16';
 const CORE_ASSETS = [
   './',
   './index.html',
