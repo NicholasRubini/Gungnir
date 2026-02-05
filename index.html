@@ -538,15 +538,8 @@
             display: contents; /* On mobile, behave as if wrapper doesn't exist */
         }
         header {
-            text-align: left;
+            text-align: center;
             padding: 2rem 1.5rem 1.25rem;
-        }
-        .rune-small {
-            font-size: 0.85rem;
-            letter-spacing: 0.35rem;
-            color: var(--accent-2);
-            text-transform: uppercase;
-            margin-bottom: 0.75rem;
         }
         h1 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -2524,7 +2517,7 @@
         <header>
             
             <h1><span>GÚNGNIR</span></h1>
-            <p style="font-size: 0.85rem; color: var(--bianco-ghiaccio); margin-top: 0.35rem;">La lancia di Odino che non sbaglia mai.</p>
+            
             <p style="font-size: 0.75rem; color: var(--bianco-dim); margin-top: 0.2rem;">Strumenti per la Forza</p>
         </header>
 
@@ -2532,7 +2525,7 @@
             <div class="hero-copy">
                 <div class="hero-kicker">Massimali • Programmazione • VBT</div>
                 <div class="hero-title">Progetta la tua forza con precisione.</div>
-                <div class="hero-sub">1RM, schemi, back-off e VBT in un cockpit unico, aggiornato in tempo reale.</div>
+                <div class="hero-sub">1RM, schemi, back-off e VBT in uno strumento unico, aggiornato in tempo reale.</div>
             </div>
             <div class="hero-metrics">
                 <div class="metric">
@@ -2542,10 +2535,6 @@
                 <div class="metric">
                     <div class="metric-label">1RM Stimato</div>
                     <div class="metric-value" id="hero1rm">—</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Training Max 90%</div>
-                    <div class="metric-value" id="heroTm">—</div>
                 </div>
                 <div class="metric">
                     <div class="metric-label">Sessione</div>
@@ -2586,13 +2575,6 @@
                         <div class="panel-title">Dati Input</div>
                         <div class="panel-controls">
                             <button class="panel-toggle" type="button" data-action="collapse" aria-label="Chiudi">–</button>
-                            <button class="panel-drag" type="button" draggable="true" aria-label="Sposta">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="5" y1="7" x2="19" y2="7"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <line x1="5" y1="17" x2="19" y2="17"></line>
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     <div class="panel-body">
@@ -2674,13 +2656,6 @@
                         <div class="panel-title">Risultato 1RM</div>
                         <div class="panel-controls">
                             <button class="panel-toggle" type="button" data-action="collapse" aria-label="Chiudi">–</button>
-                            <button class="panel-drag" type="button" draggable="true" aria-label="Sposta">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="5" y1="7" x2="19" y2="7"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <line x1="5" y1="17" x2="19" y2="17"></line>
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     <div class="panel-body">
@@ -2724,13 +2699,6 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             </button>
                             <button class="panel-toggle" type="button" data-action="collapse" aria-label="Chiudi">–</button>
-                            <button class="panel-drag" type="button" draggable="true" aria-label="Sposta">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="5" y1="7" x2="19" y2="7"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <line x1="5" y1="17" x2="19" y2="17"></line>
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     <div class="panel-body">
@@ -2757,13 +2725,6 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             </button>
                             <button class="panel-toggle" type="button" data-action="collapse" aria-label="Chiudi">–</button>
-                            <button class="panel-drag" type="button" draggable="true" aria-label="Sposta">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="5" y1="7" x2="19" y2="7"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <line x1="5" y1="17" x2="19" y2="17"></line>
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     <div class="panel-body">
@@ -2779,13 +2740,6 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             </button>
                             <button class="panel-toggle" type="button" data-action="collapse" aria-label="Chiudi">–</button>
-                            <button class="panel-drag" type="button" draggable="true" aria-label="Sposta">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="5" y1="7" x2="19" y2="7"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <line x1="5" y1="17" x2="19" y2="17"></line>
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     <div class="panel-body">
@@ -3565,6 +3519,7 @@
         const $ = id => document.getElementById(id);
         const $$ = sel => document.querySelectorAll(sel);
 
+        
         const EXPORT_LIBS = {
             html2canvas: {
                 src: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
@@ -4209,7 +4164,6 @@
         function initPanelCustomization() {
             Object.keys(PANEL_GROUPS).forEach(groupName => {
                 applyPanelState(groupName);
-                initPanelDrag(groupName);
             });
 
             document.addEventListener('click', e => {
@@ -4373,11 +4327,8 @@
 
             if (state.result) {
                 $('hero1rm').innerHTML = `${state.result}<small>${state.unit}</small>`;
-                const trainingMax = roundTo(state.result * 0.9, 1);
-                $('heroTm').innerHTML = `${trainingMax}<small>${state.unit}</small>`;
             } else {
                 $('hero1rm').textContent = '—';
-                $('heroTm').textContent = '—';
             }
 
             const totalLoad = state.weight
