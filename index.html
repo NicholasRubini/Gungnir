@@ -1127,6 +1127,24 @@
             color: var(--bianco-faded);
             margin-top: 0.5rem;
         }
+        .result-cta {
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--bianco-dim);
+        }
+        .result-cta a {
+            color: var(--oro-runico);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        .result-cta a:hover {
+            border-bottom-color: var(--oro-runico);
+        }
         .table-title {
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 0.85rem;
@@ -2667,6 +2685,10 @@
                         <div class="result-value" id="resultValue">—</div>
                         <div class="result-formula" id="resultFormula"></div>
                         <div class="result-note" id="resultNote" style="display: none; font-size: 0.7rem; color: var(--oro-runico); margin-top: 0.5rem;"></div>
+                        <div class="result-cta" id="resultCta" style="display: none;">
+                            <span>Vuoi una scheda su misura?</span>
+                            <a href="https://powerbuilding.it/pb.html?utm_source=gungnir_pwa&utm_medium=cta&utm_campaign=conversion&utm_content=calc_result_micro" target="_blank" rel="noopener">PowerBuilding A.I.</a>
+                        </div>
                     </div>
                     </div>
                 </div>
@@ -3030,8 +3052,8 @@
                         <span class="cta-tag">Video Corso</span>
                         <span class="cta-tag secondary">Allenare la Forza Massima</span>
                     </div>
-                    <div class="cta-title">Forza massima vera. Non circuiti funzionali spacciati per "forza".</div>
-                    <div class="cta-desc">Periodizzazione seria, dalla scuola russa a quella americana, con metodi testati sul campo.</div>
+                    <div class="cta-title">Impara a programmare la Forza Massima in modo professionale.</div>
+                    <div class="cta-desc">Dalla scuola russa a quella americana: principi, periodizzazione e applicazione pratica.</div>
                     <ul class="cta-list">
                         <li>5+ ore di formazione intensiva</li>
                         <li>Excel + PDF con programmi reali</li>
@@ -3162,8 +3184,8 @@
                         <span class="cta-tag">Metodo</span>
                         <span class="cta-tag secondary">Allenare la Forza Massima</span>
                     </div>
-                    <div class="cta-title">Se vuoi capire davvero il perché dei numeri, ti serve metodo.</div>
-                    <div class="cta-desc">Scuola russa + americana, periodizzazione, gestione completa di volume, intensità e frequenza.</div>
+                    <div class="cta-title">Formazione completa sulla programmazione della Forza Massima.</div>
+                    <div class="cta-desc">Dalla teoria alla pratica: periodizzazione, volume, intensità e frequenza.</div>
                     <ul class="cta-list">
                         <li>Programmazione professionale con Excel</li>
                         <li>Accesso a vita, applicabile a tutti i livelli</li>
@@ -4200,7 +4222,7 @@
             });
         }
 
-        const PB_BANNER_SAVE_THRESHOLD = 4;
+        const PB_BANNER_SAVE_THRESHOLD = 3;
         const PB_BANNER_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7;
 
         function shouldShowPbBanner() {
@@ -4299,6 +4321,8 @@
                 $('resultValue').textContent = '—';
                 $('resultFormula').textContent = '';
                 $('resultNote').style.display = 'none';
+                const resultCta = $('resultCta');
+                if (resultCta) resultCta.style.display = 'none';
                 updatePercentTable(null);
                 updateFormulaComparison(null);
                 updateHeroStats();
@@ -4327,6 +4351,8 @@
             } else {
                 resultNote.style.display = 'none';
             }
+            const resultCta = $('resultCta');
+            if (resultCta) resultCta.style.display = 'flex';
 
             updatePercentTable(mainResult);
             updateFormulaComparison(results);
