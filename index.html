@@ -136,6 +136,10 @@
             color: var(--bianco-dim);
             letter-spacing: 0.12em;
             text-transform: uppercase;
+            text-decoration: none;
+        }
+        .brand-mini:hover {
+            color: var(--oro-runico);
         }
         .brand-mini span { color: var(--oro-runico); }
         .brand-role {
@@ -2514,19 +2518,19 @@
 <body>
     <div class="app-container">
         <div class="top-bar">
-            <div class="brand-mini">Nicholas <span>Rubini</span> <span class="brand-role">- Strength &amp; Performance Coach</span></div>
+            <a class="brand-mini" href="https://www.nicholasrubini.it/" target="_blank" rel="noopener">Nicholas <span>Rubini</span></a>
         </div>
 
         <header>
-            <div class="rune-small">ᛟ ᚹ ᛁ ᚾ ᚾ</div>
+            
             <h1><span>GÚNGNIR</span></h1>
             <p style="font-size: 0.85rem; color: var(--bianco-ghiaccio); margin-top: 0.35rem;">La lancia di Odino che non sbaglia mai.</p>
-            <p style="font-size: 0.75rem; color: var(--bianco-dim); margin-top: 0.2rem;">Strength Toolkit</p>
+            <p style="font-size: 0.75rem; color: var(--bianco-dim); margin-top: 0.2rem;">Strumenti per la Forza</p>
         </header>
 
         <section class="hero-panel">
             <div class="hero-copy">
-                <div class="hero-kicker">Strength &amp; Performance Coach</div>
+                <div class="hero-kicker">Massimali • Programmazione • VBT</div>
                 <div class="hero-title">Progetta la tua forza con precisione.</div>
                 <div class="hero-sub">1RM, schemi, back-off e VBT in un cockpit unico, aggiornato in tempo reale.</div>
             </div>
@@ -3239,6 +3243,7 @@
                     <div class="backup-section">
                         <div class="backup-title">Backup & Ripristino</div>
                         <p class="backup-hint">I dati sono salvati localmente nel browser. Usa il backup per non perderli o trasferirli su un altro dispositivo (salva il file su iCloud/Drive).</p>
+                        <p class="backup-hint" style="margin-top: 0.4rem;">⚠️ Se disinstalli la PWA o cambi dispositivo, i dati si perdono senza backup.</p>
                         <div class="backup-actions">
                             <button class="backup-btn" id="backupDataBtn" title="Scarica tutti i tuoi dati in formato JSON">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
