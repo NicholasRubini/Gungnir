@@ -4586,7 +4586,7 @@
                     const backup = JSON.parse(e.target.result);
                     
                     // Validate backup structure
-                    if (!backup.data || !backup.app === 'GUNGNIR') {
+                    if (!backup || !backup.data || backup.app !== 'GUNGNIR') {
                         alert('File di backup non valido');
                         return;
                     }
@@ -5584,22 +5584,49 @@
                 container.innerHTML = '<p style="font-size: 0.8rem; color: var(--bianco-faded); text-align: center; padding: 1rem;">Nessuno schema personalizzato salvato</p>';
                 return;
             }
-            
-            container.innerHTML = customSchemas.map(schema => {
-                const preview = schema.sets.map(s => `${s.sets}×${s.reps}@${s.percent}%`).join(', ');
-                return `
-                    <div class="saved-schema-item" data-schema="${schema.id}">
-                        <div class="saved-schema-info">
-                            <div class="saved-schema-name">${schema.name}</div>
-                            <div class="saved-schema-preview">${preview}</div>
-                        </div>
-                        <div class="saved-schema-actions">
-                            <button class="schema-use-btn" onclick="selectCustomSchema('${schema.id}')">Usa</button>
-                            <button class="schema-delete-btn" onclick="deleteCustomSchema('${schema.id}')">×</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+
+            container.innerHTML = '';
+            customSchemas.forEach(schema => {
+                const previewText = schema.sets.map(s => `${s.sets}×${s.reps}@${s.percent}%`).join(', ');
+
+                const item = document.createElement('div');
+                item.className = 'saved-schema-item';
+                item.dataset.schema = schema.id;
+
+                const info = document.createElement('div');
+                info.className = 'saved-schema-info';
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'saved-schema-name';
+                nameEl.textContent = schema.name;
+
+                const previewEl = document.createElement('div');
+                previewEl.className = 'saved-schema-preview';
+                previewEl.textContent = previewText;
+
+                info.appendChild(nameEl);
+                info.appendChild(previewEl);
+
+                const actions = document.createElement('div');
+                actions.className = 'saved-schema-actions';
+
+                const useBtn = document.createElement('button');
+                useBtn.className = 'schema-use-btn';
+                useBtn.textContent = 'Usa';
+                useBtn.addEventListener('click', () => selectCustomSchema(schema.id));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'schema-delete-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.addEventListener('click', () => deleteCustomSchema(schema.id));
+
+                actions.appendChild(useBtn);
+                actions.appendChild(deleteBtn);
+
+                item.appendChild(info);
+                item.appendChild(actions);
+                container.appendChild(item);
+            });
         }
 
         function selectCustomSchema(schemaId) {
