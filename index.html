@@ -3384,11 +3384,6 @@
         <div class="export-modal-hint" id="exportHint">
             Suggerimento: su iPhone tieni premuto sull'immagine → "Aggiungi a Foto"
         </div>
-        <div class="export-modal-cta">
-            <div class="export-modal-cta-title">Vuoi una scheda su misura?</div>
-            <div class="export-modal-cta-text">PowerBuilding A.I. crea un piano che evolve con te.</div>
-            <a class="cta-btn" href="https://powerbuilding.it/pb.html?utm_source=gungnir_pwa&utm_medium=export&utm_campaign=conversion&utm_content=pb_ai_export_cta" target="_blank" rel="noopener">Scopri PowerBuilding A.I.</a>
-        </div>
     </div>
 
     <!-- Export Template (hidden, used for rendering) -->
@@ -6096,7 +6091,15 @@
             } else if (type === 'vbt') {
                 infoRows.push(['Esercizio', exerciseName]);
                 infoRows.push(['Focus', 'Velocità concentriche']);
-                infoRows.push(['Nota', 'Usa i target del pannello VBT']);
+                if (state.vbtAdvanced) {
+                    const levelLabels = { beginner: 'Principiante', intermediate: 'Intermedio', advanced: 'Avanzato' };
+                    const levelLabel = levelLabels[state.vbtLevel] || 'Intermedio';
+                    const mvtValue = parseFloat(state.vbtMvt);
+                    infoRows.push(['Livello atleta', levelLabel]);
+                    infoRows.push(['MVT personale', Number.isFinite(mvtValue) ? `${mvtValue.toFixed(2)} m/s` : '—']);
+                } else {
+                    infoRows.push(['Modalità', 'Standard']);
+                }
             } else if (type === 'session') {
                 const schemaName = $('schemaOutputTitle')?.textContent || '—';
                 infoRows.push(['Esercizio', exerciseName]);
@@ -6149,7 +6152,7 @@
                 ctx.stroke();
                 textY += 26;
 
-                const rows = PERCENT_TABLE.slice(0, 8);
+                const rows = PERCENT_TABLE.filter(row => row.pct >= 75);
                 rows.forEach((row, idx) => {
                     const total = roundToNearest(state.result * row.pct / 100, 2.5);
                     if (idx % 2 === 0) {
@@ -6168,6 +6171,47 @@
                     ctx.fillText(`${row.reps} rep`, valueX, textY);
                     textY += 40;
                 });
+            }
+
+            if (type === 'vbt') {
+                textY += 10;
+                ctx.fillStyle = accentDark;
+                ctx.font = `700 26px ${fontSans}`;
+                ctx.textAlign = 'left';
+                ctx.fillText('Tabella VBT (m/s)', labelX, textY);
+                textY += 34;
+                ctx.strokeStyle = '#E2E8F0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(labelX, textY);
+                ctx.lineTo(valueX, textY);
+                ctx.stroke();
+                textY += 26;
+
+                const vbtRows = [100, 90, 85, 80, 75, 70, 65, 60];
+                vbtRows.forEach((pct, idx) => {
+                    const velVal = getVbtVelocity(state.exercise, pct, true);
+                    const display = Number.isFinite(velVal) ? velVal.toFixed(2) : '—';
+                    if (idx % 2 === 0) {
+                        ctx.fillStyle = '#F1F5F9';
+                        drawRoundedRect(ctx, labelX - 10, textY - 24, boxW - 76, 34, 10);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = dark;
+                    ctx.font = `600 24px ${fontSans}`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`${pct}%`, labelX, textY);
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${display} m/s`, valueX, textY);
+                    textY += 40;
+                });
+
+                if (state.vbtAdvanced) {
+                    ctx.fillStyle = mutedLight;
+                    ctx.font = `20px ${fontSans}`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Velocità adattate a MVT e livello atleta', labelX, textY + 10);
+                }
             }
 
             // Footer
