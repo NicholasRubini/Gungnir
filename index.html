@@ -555,7 +555,7 @@
         h1 span { color: var(--oro-runico); }
         .hero-panel {
             margin: 0 1.5rem 1.5rem;
-            padding: 1.25rem 1.5rem;
+            padding: 1.1rem 1.5rem;
             border-radius: 24px;
             background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
             border: 1px solid rgba(59, 130, 246, 0.35);
@@ -586,6 +586,34 @@
         .hero-sub {
             font-size: 0.9rem;
             color: #CBD5E1;
+        }
+        .hero-how {
+            font-size: 0.75rem;
+            color: rgba(226, 232, 240, 0.7);
+        }
+        .hero-side {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .hero-cta {
+            align-self: flex-start;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(59, 130, 246, 0.6);
+            background: rgba(59, 130, 246, 0.15);
+            color: #E2E8F0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .hero-cta:hover {
+            background: var(--oro-runico);
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.28);
         }
         .hero-metrics {
             display: grid;
@@ -643,6 +671,15 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             align-items: center;
+        }
+        @media (max-width: 767px) {
+            .hero-panel {
+                padding: 0.85rem 1.1rem;
+                gap: 0.75rem;
+            }
+            .hero-cta {
+                align-self: flex-start;
+            }
         }
         .main-tabs::-webkit-scrollbar { display: none; }
         .tab-item {
@@ -2522,19 +2559,23 @@
                 <div class="hero-kicker">Massimali • Programmazione • VBT</div>
                 <div class="hero-title">Progetta la tua forza con precisione.</div>
                 <div class="hero-sub">1RM, schemi, back-off e VBT in uno strumento unico, aggiornato in tempo reale.</div>
+                <div class="hero-how">1) Scegli esercizio 2) Inserisci carico+reps 3) Calcola</div>
             </div>
-            <div class="hero-metrics">
-                <div class="metric">
-                    <div class="metric-label">Esercizio</div>
-                    <div class="metric-value" id="heroExercise">—</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">1RM Stimato</div>
-                    <div class="metric-value" id="hero1rm">—</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Sessione</div>
-                    <div class="metric-value" id="heroLoad">—</div>
+            <div class="hero-side">
+                <button class="hero-cta" id="heroCtaBtn" type="button">Inizia ora</button>
+                <div class="hero-metrics">
+                    <div class="metric">
+                        <div class="metric-label">Esercizio</div>
+                        <div class="metric-value" id="heroExercise">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">1RM Stimato</div>
+                        <div class="metric-value" id="hero1rm">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Sessione</div>
+                        <div class="metric-value" id="heroLoad">—</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -4281,6 +4322,24 @@
             $('heroLoad').textContent = totalLoad > 0
                 ? `${totalLoad}${state.unit} × ${state.reps} · ${rpeLabel}`
                 : '—';
+        }
+
+        function scrollToInputsFromHero() {
+            setMainTab('calculator');
+            const panel = document.querySelector('.panel-card[data-panel-id="inputs"]');
+            if (panel && panel.classList.contains('collapsed')) {
+                const state = getPanelState('calc-input');
+                state.collapsed.inputs = false;
+                savePanelState('calc-input', state);
+                setPanelCollapsed(panel, false);
+            }
+            const target = $('variationSelect') || $('weightInput') || panel;
+            if (!target) return;
+            const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            target.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+            if (typeof target.focus === 'function') {
+                setTimeout(() => target.focus({ preventScroll: true }), prefersReduced ? 0 : 350);
+            }
         }
 
         function updatePercentTable(oneRM) {
@@ -6598,6 +6657,11 @@
             $('exportModal').addEventListener('click', (e) => {
                 if (e.target === $('exportModal')) closeExportModal();
             });
+
+            const heroCta = $('heroCtaBtn');
+            if (heroCta) {
+                heroCta.addEventListener('click', scrollToInputsFromHero);
+            }
 
             // Load saved preferences
             
