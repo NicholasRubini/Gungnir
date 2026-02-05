@@ -5906,122 +5906,273 @@
             storyCanvas.width = 1080;
             storyCanvas.height = 1920;
             const ctx = storyCanvas.getContext('2d');
-            ctx.fillStyle = '#F8FAFC';
+            const accent = '#3B82F6';
+            const accentDark = '#1D4ED8';
+            const dark = '#0F172A';
+            const muted = '#64748B';
+            const mutedLight = '#94A3B8';
+            const light = '#F8FAFC';
+            const fontSans = 'system-ui, -apple-system, \"SF Pro Display\", \"SF Pro Text\", \"Helvetica Neue\", Arial, sans-serif';
+
+            const bg = ctx.createLinearGradient(0, 0, storyCanvas.width, storyCanvas.height);
+            bg.addColorStop(0, '#F8FAFC');
+            bg.addColorStop(0.5, '#EDF3FF');
+            bg.addColorStop(1, '#E8F7F1');
+            ctx.fillStyle = bg;
             ctx.fillRect(0, 0, storyCanvas.width, storyCanvas.height);
 
-            // Header
+            function drawRoundedRect(ctxRef, x, y, w, h, r) {
+                if (typeof ctxRef.roundRect === 'function') {
+                    ctxRef.beginPath();
+                    ctxRef.roundRect(x, y, w, h, r);
+                    return;
+                }
+                ctxRef.beginPath();
+                ctxRef.moveTo(x + r, y);
+                ctxRef.lineTo(x + w - r, y);
+                ctxRef.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctxRef.lineTo(x + w, y + h - r);
+                ctxRef.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctxRef.lineTo(x + r, y + h);
+                ctxRef.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctxRef.lineTo(x, y + r);
+                ctxRef.quadraticCurveTo(x, y, x + r, y);
+            }
+
+            function drawCard(ctxRef, x, y, w, h, r) {
+                ctxRef.save();
+                ctxRef.shadowColor = 'rgba(15, 23, 42, 0.18)';
+                ctxRef.shadowBlur = 30;
+                ctxRef.shadowOffsetY = 16;
+                drawRoundedRect(ctxRef, x, y, w, h, r);
+                ctxRef.fillStyle = '#FFFFFF';
+                ctxRef.fill();
+                ctxRef.restore();
+                ctxRef.strokeStyle = '#E2E8F0';
+                ctxRef.lineWidth = 2;
+                drawRoundedRect(ctxRef, x, y, w, h, r);
+                ctxRef.stroke();
+            }
+
+            function drawPill(ctxRef, text, x, y, paddingX = 18, paddingY = 8) {
+                ctxRef.font = `600 22px ${fontSans}`;
+                const w = ctxRef.measureText(text).width + paddingX * 2;
+                const h = 24 + paddingY * 2;
+                ctxRef.fillStyle = 'rgba(59,130,246,0.12)';
+                ctxRef.strokeStyle = 'rgba(59,130,246,0.3)';
+                ctxRef.lineWidth = 1.5;
+                drawRoundedRect(ctxRef, x, y - h + 4, w, h, 999);
+                ctxRef.fill();
+                ctxRef.stroke();
+                ctxRef.fillStyle = accent;
+                ctxRef.fillText(text, x + paddingX, y);
+                return w;
+            }
+
+            function drawSpear(ctxRef, x, y, size, color) {
+                const cx = x + size / 2;
+                const tipY = y;
+                const headH = size * 0.28;
+                const headW = size * 0.34;
+                const shaftW = size * 0.12;
+                const shaftTop = tipY + headH * 0.9;
+                const shaftBottom = y + size * 0.78;
+                const baseH = size * 0.18;
+
+                ctxRef.fillStyle = color;
+                ctxRef.beginPath();
+                ctxRef.moveTo(cx, tipY);
+                ctxRef.lineTo(cx - headW / 2, tipY + headH);
+                ctxRef.lineTo(cx + headW / 2, tipY + headH);
+                ctxRef.closePath();
+                ctxRef.fill();
+
+                ctxRef.fillRect(cx - shaftW / 2, shaftTop, shaftW, shaftBottom - shaftTop);
+
+                ctxRef.beginPath();
+                ctxRef.moveTo(cx - shaftW / 2, shaftBottom);
+                ctxRef.lineTo(cx + shaftW / 2, shaftBottom);
+                ctxRef.lineTo(cx, shaftBottom + baseH);
+                ctxRef.closePath();
+                ctxRef.fill();
+
+                const barW = size * 0.34;
+                const barH = size * 0.06;
+                const barY = tipY + headH * 0.72;
+                drawRoundedRect(ctxRef, cx - barW / 2, barY, barW, barH, barH / 2);
+                ctxRef.fill();
+            }
+
+            // Brand capsule
+            const marginX = 72;
+            const capsuleX = marginX;
+            const capsuleY = 80;
+            const capsuleW = storyCanvas.width - marginX * 2;
+            const capsuleH = 170;
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(15, 23, 42, 0.25)';
+            ctx.shadowBlur = 26;
+            ctx.shadowOffsetY = 14;
+            const capsuleGrad = ctx.createLinearGradient(capsuleX, capsuleY, capsuleX + capsuleW, capsuleY + capsuleH);
+            capsuleGrad.addColorStop(0, '#0B1220');
+            capsuleGrad.addColorStop(1, '#111C3B');
+            drawRoundedRect(ctx, capsuleX, capsuleY, capsuleW, capsuleH, 32);
+            ctx.fillStyle = capsuleGrad;
+            ctx.fill();
+            ctx.restore();
+
+            const iconSize = 78;
+            const iconX = capsuleX + 40;
+            const iconY = capsuleY + (capsuleH - iconSize) / 2;
+            ctx.beginPath();
+            ctx.arc(iconX + iconSize / 2, iconY + iconSize / 2, iconSize / 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#1D4ED8';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(iconX + iconSize / 2, iconY + iconSize / 2, iconSize / 2 - 4, 0, Math.PI * 2);
             ctx.fillStyle = '#3B82F6';
-            ctx.font = '700 60px Arial, sans-serif';
+            ctx.fill();
+            drawSpear(ctx, iconX + 16, iconY + 10, iconSize - 32, '#FFFFFF');
+
             ctx.textAlign = 'left';
-            ctx.fillText('GÚNGNIR', 120, 140);
-            ctx.fillStyle = '#475569';
-            ctx.font = '24px Arial, sans-serif';
-            ctx.fillText('Strength Toolkit', 120, 180);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `700 46px ${fontSans}`;
+            ctx.fillText('GÚNGNIR', iconX + iconSize + 24, capsuleY + 68);
+            ctx.fillStyle = '#CBD5F5';
+            ctx.font = `500 24px ${fontSans}`;
+            ctx.fillText('Strength Toolkit', iconX + iconSize + 24, capsuleY + 102);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#E2E8F0';
+            ctx.font = `600 24px ${fontSans}`;
+            ctx.fillText('Nicholas Rubini', capsuleX + capsuleW - 32, capsuleY + 68);
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = `500 22px ${fontSans}`;
+            ctx.fillText('Strength & Performance Coach', capsuleX + capsuleW - 32, capsuleY + 100);
+            ctx.textAlign = 'left';
 
             // Title & subtitle
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#0F172A';
-            ctx.font = '700 42px Arial, sans-serif';
-            ctx.fillText(title, storyCanvas.width / 2, 280);
-            let y = 320;
+            ctx.fillStyle = dark;
+            ctx.font = `700 44px ${fontSans}`;
+            ctx.fillText(title, storyCanvas.width / 2, 320);
+            let y = 360;
             if (subtitle) {
-                ctx.fillStyle = '#64748B';
-                ctx.font = '28px Arial, sans-serif';
-                y = drawWrappedText(ctx, subtitle, storyCanvas.width / 2, y, 800, 34);
+                ctx.fillStyle = muted;
+                ctx.font = `500 28px ${fontSans}`;
+                y = drawWrappedText(ctx, subtitle, storyCanvas.width / 2, y, 840, 36);
             }
 
-            // Content box
-            const boxX = 120;
-            const boxY = 380;
-            const boxW = 840;
-            const boxH = 980;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.strokeStyle = '#E2E8F0';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            if (typeof ctx.roundRect === 'function') {
-                ctx.roundRect(boxX, boxY, boxW, boxH, 28);
-            } else {
-                const r = 28;
-                ctx.moveTo(boxX + r, boxY);
-                ctx.lineTo(boxX + boxW - r, boxY);
-                ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + r);
-                ctx.lineTo(boxX + boxW, boxY + boxH - r);
-                ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH);
-                ctx.lineTo(boxX + r, boxY + boxH);
-                ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - r);
-                ctx.lineTo(boxX, boxY + r);
-                ctx.quadraticCurveTo(boxX, boxY, boxX + r, boxY);
-            }
-            ctx.fill();
-            ctx.stroke();
+            // Content card
+            const boxX = marginX;
+            const boxY = 420;
+            const boxW = storyCanvas.width - marginX * 2;
+            const boxH = 1040;
+            drawCard(ctx, boxX, boxY, boxW, boxH, 32);
 
-            ctx.fillStyle = '#0F172A';
+            // Card header
             ctx.textAlign = 'left';
-            ctx.font = '700 30px Arial, sans-serif';
-            ctx.fillText('Riepilogo', boxX + 40, boxY + 70);
+            ctx.fillStyle = dark;
+            ctx.font = `700 30px ${fontSans}`;
+            ctx.fillText('Riepilogo', boxX + 48, boxY + 72);
+            drawPill(ctx, title, boxX + 320, boxY + 74);
 
-            ctx.font = '26px Arial, sans-serif';
-            ctx.fillStyle = '#475569';
-
-            const lines = [];
+            // Data rows
             const exerciseName = exercises[state.exercise]?.name?.it || '—';
+            const infoRows = [];
             if (type === 'percent') {
-                lines.push(`Esercizio: ${exerciseName}`);
-                lines.push(`1RM stimato: ${state.result || '—'} ${state.unit}`);
-                lines.push(`Carico inserito: ${state.weight || '—'} ${state.unit}`);
-                lines.push(`Ripetizioni: ${state.reps}`);
-                lines.push(`Intensità: ${formatIntensity(state.rpe, state.rpeMode)}`);
-                if (state.result) {
-                    lines.push('---');
-                    PERCENT_TABLE.slice(0, 8).forEach(row => {
-                        const total = roundToNearest(state.result * row.pct / 100, 2.5);
-                        lines.push(`${row.pct}% · ${total} ${state.unit} · ${row.reps} rep`);
-                    });
-                }
+                infoRows.push(['Esercizio', exerciseName]);
+                infoRows.push(['1RM stimato', `${state.result || '—'} ${state.unit}`]);
+                infoRows.push(['Carico inserito', `${state.weight || '—'} ${state.unit}`]);
+                infoRows.push(['Ripetizioni', `${state.reps}`]);
+                infoRows.push(['Intensità', `${formatIntensity(state.rpe, state.rpeMode)}`]);
             } else if (type === 'zones') {
-                lines.push(`Esercizio: ${exerciseName}`);
-                lines.push('Zone:');
-                lines.push('Forza Max 85-100% (VL 5-10%)');
-                lines.push('Forza/Ipertrofia 75-85% (VL 10-20%)');
-                lines.push('Ipertrofia 65-75% (VL 20-40%)');
-                lines.push('Resistenza 50-65% (VL 30-40%)');
+                infoRows.push(['Esercizio', exerciseName]);
+                infoRows.push(['Forza Max', '85–100% · VL 5–10%']);
+                infoRows.push(['Forza/Ipertrofia', '75–85% · VL 10–20%']);
+                infoRows.push(['Ipertrofia', '65–75% · VL 20–40%']);
+                infoRows.push(['Resistenza', '50–65% · VL 30–40%']);
             } else if (type === 'vbt') {
-                lines.push(`Esercizio: ${exerciseName}`);
-                lines.push('VBT: velocità concentriche');
-                lines.push('Usa i valori nel pannello per target');
+                infoRows.push(['Esercizio', exerciseName]);
+                infoRows.push(['Focus', 'Velocità concentriche']);
+                infoRows.push(['Nota', 'Usa i target del pannello VBT']);
             } else if (type === 'session') {
-                lines.push(`Esercizio: ${exerciseName}`);
-                lines.push('Schema selezionato');
                 const schemaName = $('schemaOutputTitle')?.textContent || '—';
-                lines.push(`Protocollo: ${schemaName}`);
-                lines.push('Apri l’app per i carichi dettagliati');
+                infoRows.push(['Esercizio', exerciseName]);
+                infoRows.push(['Schema', schemaName]);
+                infoRows.push(['Nota', 'Apri l’app per i carichi dettagliati']);
             } else if (type === 'backoff') {
-                lines.push(`Esercizio: ${exerciseName}`);
-                lines.push(`Anchor: ${currentAnchorType.toUpperCase()}`);
-                lines.push(`Carico: ${$('anchorLoadInput')?.value || '—'} ${state.unit}`);
-                lines.push(`Back-off 5%: ${$('backoff5Value')?.textContent || '—'}`);
-                lines.push(`Back-off 10%: ${$('backoff10Value')?.textContent || '—'}`);
+                infoRows.push(['Esercizio', exerciseName]);
+                infoRows.push(['Anchor', currentAnchorType.toUpperCase()]);
+                infoRows.push(['Carico', `${$('anchorLoadInput')?.value || '—'} ${state.unit}`]);
+                infoRows.push(['Back-off 5%', `${$('backoff5Value')?.textContent || '—'}`]);
+                infoRows.push(['Back-off 10%', `${$('backoff10Value')?.textContent || '—'}`]);
             }
 
-            let textY = boxY + 120;
-            const lineHeight = 40;
-            lines.forEach(line => {
-                if (line === '---') {
-                    textY += 10;
-                    ctx.fillStyle = '#E2E8F0';
-                    ctx.fillRect(boxX + 40, textY, boxW - 80, 2);
-                    textY += 28;
-                    ctx.fillStyle = '#475569';
-                    return;
+            let textY = boxY + 130;
+            const labelX = boxX + 48;
+            const valueX = boxX + boxW - 48;
+            const lineHeight = 44;
+            infoRows.forEach(([label, value], idx) => {
+                ctx.fillStyle = mutedLight;
+                ctx.font = `600 24px ${fontSans}`;
+                ctx.textAlign = 'left';
+                ctx.fillText(label, labelX, textY);
+                ctx.fillStyle = dark;
+                ctx.font = `700 24px ${fontSans}`;
+                ctx.textAlign = 'right';
+                ctx.fillText(value, valueX, textY);
+                if (idx < infoRows.length - 1) {
+                    ctx.strokeStyle = '#E2E8F0';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(labelX, textY + 16);
+                    ctx.lineTo(valueX, textY + 16);
+                    ctx.stroke();
                 }
-                ctx.fillText(line, boxX + 40, textY);
                 textY += lineHeight;
             });
 
+            if (type === 'percent' && state.result) {
+                textY += 10;
+                ctx.fillStyle = accentDark;
+                ctx.font = `700 26px ${fontSans}`;
+                ctx.textAlign = 'left';
+                ctx.fillText('Tabella Rapida', labelX, textY);
+                textY += 34;
+                ctx.strokeStyle = '#E2E8F0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(labelX, textY);
+                ctx.lineTo(valueX, textY);
+                ctx.stroke();
+                textY += 26;
+
+                const rows = PERCENT_TABLE.slice(0, 8);
+                rows.forEach((row, idx) => {
+                    const total = roundToNearest(state.result * row.pct / 100, 2.5);
+                    if (idx % 2 === 0) {
+                        ctx.fillStyle = '#F1F5F9';
+                        drawRoundedRect(ctx, labelX - 10, textY - 24, boxW - 76, 34, 10);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = dark;
+                    ctx.font = `600 24px ${fontSans}`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`${row.pct}%`, labelX, textY);
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${total} ${state.unit}`, boxX + boxW / 2, textY);
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = muted;
+                    ctx.fillText(`${row.reps} rep`, valueX, textY);
+                    textY += 40;
+                });
+            }
+
             // Footer
-            ctx.fillStyle = '#94A3B8';
-            ctx.font = '24px Arial, sans-serif';
+            ctx.fillStyle = mutedLight;
+            ctx.font = `24px ${fontSans}`;
             ctx.textAlign = 'center';
             ctx.fillText('nicholasrubini.it', storyCanvas.width / 2, storyCanvas.height - 120);
             ctx.fillText('Strength & Performance Coach', storyCanvas.width / 2, storyCanvas.height - 80);
