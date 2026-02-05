@@ -3216,7 +3216,7 @@
                     <!-- Backup/Ripristina Section -->
                     <div class="backup-section">
                         <div class="backup-title">Backup & Ripristino</div>
-                        <p class="backup-hint">I dati sono salvati localmente nel browser. Usa il backup per non perderli o trasferirli su un altro dispositivo.</p>
+                        <p class="backup-hint">I dati sono salvati localmente nel browser. Usa il backup per non perderli o trasferirli su un altro dispositivo (salva il file su iCloud/Drive).</p>
                         <div class="backup-actions">
                             <button class="backup-btn" id="backupDataBtn" title="Scarica tutti i tuoi dati in formato JSON">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -4488,7 +4488,7 @@
             renderHistory();
         }
 
-        function backupData() {
+        async function backupData() {
             const backupObj = {
                 version: '1.0',
                 exportDate: new Date().toISOString(),
@@ -4505,6 +4505,31 @@
             const blob = new Blob([jsonStr], { type: 'application/json' });
             const dateStr = new Date().toISOString().slice(0, 10);
             const filename = `gungnir-backup-${dateStr}.json`;
+
+            if (navigator.share && navigator.canShare) {
+                try {
+                    const file = new File([blob], filename, { type: 'application/json' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'GÚNGNIR Backup'
+                        });
+                        const btn = $('backupDataBtn');
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = '✓ Backup condiviso!';
+                        btn.style.borderColor = 'var(--success)';
+                        btn.style.color = 'var(--success)';
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                            btn.style.borderColor = '';
+                            btn.style.color = '';
+                        }, 2000);
+                        return;
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                }
+            }
             
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -6104,7 +6129,13 @@
                 const schemaName = $('schemaOutputTitle')?.textContent || '—';
                 infoRows.push(['Esercizio', exerciseName]);
                 infoRows.push(['Schema', schemaName]);
-                infoRows.push(['Nota', 'Apri l’app per i carichi dettagliati']);
+                if (state.result) {
+                    infoRows.push(['1RM stimato', `${state.result} ${state.unit}`]);
+                }
+                const rampValue = parseFloat($('ramp1Input')?.value);
+                if (Number.isFinite(rampValue) && rampValue > 0) {
+                    infoRows.push(['RAMP1', `${rampValue} ${state.unit}`]);
+                }
             } else if (type === 'backoff') {
                 infoRows.push(['Esercizio', exerciseName]);
                 infoRows.push(['Anchor', currentAnchorType.toUpperCase()]);
@@ -6153,6 +6184,26 @@
                 textY += 26;
 
                 const rows = PERCENT_TABLE.filter(row => row.pct >= 75);
+                const showVel = !!state.showVelocity;
+                const pctX = labelX;
+                const weightX = boxX + boxW * 0.52;
+                const repsX = boxX + boxW * 0.76;
+                const velX = valueX;
+
+                if (showVel) {
+                    ctx.fillStyle = mutedLight;
+                    ctx.font = `600 20px ${fontSans}`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText('%', pctX, textY);
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Kg', weightX, textY);
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Rep', repsX, textY);
+                    ctx.textAlign = 'right';
+                    ctx.fillText('Vel.', velX, textY);
+                    textY += 28;
+                }
+
                 rows.forEach((row, idx) => {
                     const total = roundToNearest(state.result * row.pct / 100, 2.5);
                     if (idx % 2 === 0) {
@@ -6162,15 +6213,76 @@
                     }
                     ctx.fillStyle = dark;
                     ctx.font = `600 24px ${fontSans}`;
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`${row.pct}%`, labelX, textY);
-                    ctx.textAlign = 'center';
-                    ctx.fillText(`${total} ${state.unit}`, boxX + boxW / 2, textY);
-                    ctx.textAlign = 'right';
-                    ctx.fillStyle = muted;
-                    ctx.fillText(`${row.reps} rep`, valueX, textY);
+                    if (showVel) {
+                        const velVal = getVbtVelocity(state.exercise, row.pct, true);
+                        const velDisplay = Number.isFinite(velVal) ? velVal.toFixed(2) : '—';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`${row.pct}%`, pctX, textY);
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${total} ${state.unit}`, weightX, textY);
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = muted;
+                        ctx.fillText(`${row.reps} rep`, repsX, textY);
+                        ctx.fillStyle = dark;
+                        ctx.textAlign = 'right';
+                        ctx.fillText(velDisplay, velX, textY);
+                    } else {
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`${row.pct}%`, labelX, textY);
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${total} ${state.unit}`, boxX + boxW / 2, textY);
+                        ctx.textAlign = 'right';
+                        ctx.fillStyle = muted;
+                        ctx.fillText(`${row.reps} rep`, valueX, textY);
+                    }
                     textY += 40;
                 });
+            }
+
+            if (type === 'session') {
+                textY += 10;
+                ctx.fillStyle = accentDark;
+                ctx.font = `700 26px ${fontSans}`;
+                ctx.textAlign = 'left';
+                ctx.fillText('Carichi di lavoro', labelX, textY);
+                textY += 34;
+                ctx.strokeStyle = '#E2E8F0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(labelX, textY);
+                ctx.lineTo(valueX, textY);
+                ctx.stroke();
+                textY += 26;
+
+                const sessionRows = [];
+                const rowEls = document.querySelectorAll('#schemaOutputRows .schema-output-row');
+                rowEls.forEach(rowEl => {
+                    const sets = rowEl.querySelector('.schema-output-sets')?.textContent?.trim();
+                    const weight = rowEl.querySelector('.schema-output-weight')?.textContent?.trim();
+                    if (sets || weight) sessionRows.push({ sets, weight });
+                });
+
+                if (sessionRows.length === 0) {
+                    ctx.fillStyle = muted;
+                    ctx.font = `24px ${fontSans}`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Calcola il tuo 1RM per generare i carichi.', labelX, textY);
+                } else {
+                    sessionRows.forEach((row, idx) => {
+                        if (idx % 2 === 0) {
+                            ctx.fillStyle = '#F1F5F9';
+                            drawRoundedRect(ctx, labelX - 10, textY - 24, boxW - 76, 34, 10);
+                            ctx.fill();
+                        }
+                        ctx.fillStyle = dark;
+                        ctx.font = `600 24px ${fontSans}`;
+                        ctx.textAlign = 'left';
+                        ctx.fillText(row.sets || '—', labelX, textY);
+                        ctx.textAlign = 'right';
+                        ctx.fillText(row.weight || '—', valueX, textY);
+                        textY += 40;
+                    });
+                }
             }
 
             if (type === 'vbt') {
