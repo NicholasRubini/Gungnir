@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="GÚNGNIR">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0F172A">
-    <meta name="description" content="GÚNGNIR, la lancia di Odino che non sbaglia mai. Strength Toolkit completo: calcolatore 1RM, schemi di forza, back-off automatici, VBT, RPE/RIR, cronologia e progressi.">
+    <meta name="description" content="GUNGNIR e uno strumento per la forza: calcolatore 1RM, schemi di allenamento, back-off, VBT, RPE/RIR, cronologia e progressi. Creato da Nicholas Rubini.">
     
     <title>GÚNGNIR — La lancia di Odino | Strength Toolkit</title>
     
@@ -597,18 +597,21 @@
             gap: 0.75rem;
         }
         .hero-cta {
-            align-self: flex-start;
-            padding: 0.5rem 1rem;
-            border-radius: 999px;
+            width: 100%;
+            border-radius: 16px;
             border: 1px solid rgba(59, 130, 246, 0.6);
-            background: rgba(59, 130, 246, 0.15);
+            background: rgba(59, 130, 246, 0.18);
             color: #E2E8F0;
             font-size: 0.75rem;
             font-weight: 600;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem 0.9rem;
         }
         .hero-cta:hover {
             background: var(--oro-runico);
@@ -678,7 +681,7 @@
                 gap: 0.75rem;
             }
             .hero-cta {
-                align-self: flex-start;
+                width: 100%;
             }
         }
         .main-tabs::-webkit-scrollbar { display: none; }
@@ -2562,7 +2565,6 @@
                 <div class="hero-how">1) Scegli esercizio 2) Inserisci carico+reps 3) Calcola</div>
             </div>
             <div class="hero-side">
-                <button class="hero-cta" id="heroCtaBtn" type="button">Inizia ora</button>
                 <div class="hero-metrics">
                     <div class="metric">
                         <div class="metric-label">Esercizio</div>
@@ -2576,6 +2578,7 @@
                         <div class="metric-label">Sessione</div>
                         <div class="metric-value" id="heroLoad">—</div>
                     </div>
+                    <button class="hero-cta" id="heroCtaBtn" type="button">Inizia ora</button>
                 </div>
             </div>
         </section>
