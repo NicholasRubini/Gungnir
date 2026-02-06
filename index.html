@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="GÚNGNIR">
@@ -3345,7 +3345,7 @@
         <footer>
             <div class="footer-rune">ᛟ ᚹ ᛁ ᚾ ᚾ</div>
             <div class="footer-text">
-                <a href="https://www.nicholasrubini.it" target="_blank">Nicholas Rubini</a> — Forgia la Tua Forza
+                <a href="https://www.nicholasrubini.it" target="_blank" rel="noopener">Nicholas Rubini</a> — Forgia la Tua Forza
             </div>
         </footer>
     </div>
@@ -3577,6 +3577,125 @@
         const $ = id => document.getElementById(id);
         const $$ = sel => document.querySelectorAll(sel);
 
+        function safeParseJSON(raw, fallback) {
+            if (typeof raw !== 'string') return fallback;
+            try {
+                return JSON.parse(raw);
+            } catch (err) {
+                return fallback;
+            }
+        }
+
+        function readStorageJSON(key, fallback) {
+            try {
+                return safeParseJSON(localStorage.getItem(key), fallback);
+            } catch (err) {
+                return fallback;
+            }
+        }
+
+        function sanitizeText(value, maxLen = 80) {
+            const text = typeof value === 'string' ? value : String(value ?? '');
+            return text.replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, maxLen);
+        }
+
+        function toFiniteNumber(value, fallback, min = -Infinity, max = Infinity, decimals = null) {
+            const num = typeof value === 'number' ? value : parseFloat(value);
+            if (!Number.isFinite(num)) return fallback;
+            const clamped = Math.min(max, Math.max(min, num));
+            if (!Number.isFinite(clamped)) return fallback;
+            if (typeof decimals !== 'number') return clamped;
+            const factor = Math.pow(10, decimals);
+            return Math.round(clamped * factor) / factor;
+        }
+
+        function toSafeIsoDate(value) {
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return new Date().toISOString();
+            return parsed.toISOString();
+        }
+
+        function normalizeHistoryEntry(entry, index = 0) {
+            if (!entry || typeof entry !== 'object') return null;
+
+            const exercise = exercises[entry.exercise] ? entry.exercise : 'bench';
+            const fallbackVariation = exercises[exercise]?.variations?.it?.[0] || exercises[exercise]?.name?.it || '—';
+            const variation = sanitizeText(entry.variation || fallbackVariation, 80) || fallbackVariation;
+            const weight = toFiniteNumber(entry.weight, NaN, 0.1, 2000, 1);
+            const reps = Math.round(toFiniteNumber(entry.reps, NaN, 1, 30));
+            const rpeMode = entry.rpeMode === 'rir' ? 'rir' : 'rpe';
+            const rpeMin = rpeMode === 'rir' ? 0 : 6;
+            const rpeMax = rpeMode === 'rir' ? 4 : 10;
+            const rpe = toFiniteNumber(entry.rpe, rpeMode === 'rir' ? 2 : 8, rpeMin, rpeMax, 1);
+            const formula = Object.prototype.hasOwnProperty.call(FORMULAS, entry.formula) ? entry.formula : 'average';
+            const result = toFiniteNumber(entry.result, NaN, 0.1, 3000, 1);
+            const date = toSafeIsoDate(entry.date);
+            const idNum = Number.parseInt(entry.id, 10);
+            const id = Number.isFinite(idNum) && idNum > 0 ? idNum : Date.now() + index;
+
+            if (!Number.isFinite(weight) || !Number.isFinite(result) || !Number.isFinite(reps)) return null;
+
+            return {
+                id,
+                exercise,
+                variation,
+                weight,
+                reps,
+                rpe,
+                rpeMode,
+                formula,
+                result,
+                unit: 'kg',
+                date
+            };
+        }
+
+        function normalizeHistory(list) {
+            if (!Array.isArray(list)) return [];
+            return list
+                .map((entry, idx) => normalizeHistoryEntry(entry, idx))
+                .filter(Boolean)
+                .slice(0, 100);
+        }
+
+        function normalizeSchemaSet(set) {
+            if (!set || typeof set !== 'object') return null;
+            const sets = Math.round(toFiniteNumber(set.sets, NaN, 1, 20));
+            const reps = Math.round(toFiniteNumber(set.reps, NaN, 1, 30));
+            const percent = toFiniteNumber(set.percent, NaN, 50, 120, 1);
+            if (!Number.isFinite(sets) || !Number.isFinite(reps) || !Number.isFinite(percent)) return null;
+            return { sets, reps, percent };
+        }
+
+        function normalizeCustomSchema(schema, index = 0) {
+            if (!schema || typeof schema !== 'object') return null;
+            const name = sanitizeText(schema.name, 60);
+            if (!name) return null;
+            const sets = Array.isArray(schema.sets) ? schema.sets.map(normalizeSchemaSet).filter(Boolean) : [];
+            if (sets.length === 0) return null;
+            const rawId = sanitizeText(schema.id, 80);
+            const id = rawId || `custom-${Date.now()}-${index}`;
+            return {
+                id,
+                name,
+                type: 'custom',
+                sets
+            };
+        }
+
+        function normalizeCustomSchemas(list) {
+            if (!Array.isArray(list)) return [];
+            return list
+                .map((schema, idx) => normalizeCustomSchema(schema, idx))
+                .filter(Boolean)
+                .slice(0, 50);
+        }
+
+        function normalizeStoredLoad(value) {
+            const num = toFiniteNumber(value, NaN, 0.1, 2000, 1);
+            return Number.isFinite(num) ? String(num) : null;
+        }
+
         
         const EXPORT_LIBS = {
             html2canvas: {
@@ -3756,7 +3875,34 @@
             defaultOrder.forEach(id => {
                 hidden[id] = false;
             });
-            return { order: defaultOrder.slice(), hidden };
+            if (!group || defaultOrder.length === 0) {
+                return { order: defaultOrder.slice(), hidden };
+            }
+
+            const saved = readStorageJSON(group.storageKey, {});
+            const order = [];
+            if (Array.isArray(saved.order)) {
+                saved.order.forEach(id => {
+                    if (defaultOrder.includes(id) && !order.includes(id)) order.push(id);
+                });
+            }
+            defaultOrder.forEach(id => {
+                if (!order.includes(id)) order.push(id);
+            });
+
+            if (saved && typeof saved.hidden === 'object' && saved.hidden) {
+                defaultOrder.forEach(id => {
+                    if (Object.prototype.hasOwnProperty.call(saved.hidden, id)) {
+                        hidden[id] = saved.hidden[id] === true;
+                    }
+                });
+            }
+
+            if (Object.values(hidden).every(Boolean) && order[0]) {
+                hidden[order[0]] = false;
+            }
+
+            return { order, hidden };
         }
 
         function saveTabState(groupName, state) {
@@ -4287,7 +4433,6 @@
                 const resultCta = $('resultCta');
                 if (resultCta) resultCta.style.display = 'none';
                 updatePercentTable(null);
-                updateFormulaComparison(null);
                 updateHeroStats();
                 return;
             }
@@ -4318,7 +4463,6 @@
             if (resultCta) resultCta.style.display = 'flex';
 
             updatePercentTable(mainResult);
-            updateFormulaComparison(results);
             updateHeroStats();
         }
 
@@ -4418,21 +4562,6 @@
             $$('.vel-col').forEach(el => el.style.display = show ? '' : 'none');
         }
 
-        function updateFormulaComparison(results) {
-            const formulaGrid = $('formulaGrid');
-            if (!formulaGrid) return;
-            const formulaNames = Object.keys(FORMULAS);
-            const html = formulaNames.map(name => {
-                const value = results ? roundTo(results[name], 1) : '—';
-                const isActive = name === state.formula;
-                return `<div class="formula-item${isActive ? ' highlight' : ''}" data-formula="${name}">
-                    <div class="formula-name">${name}</div>
-                    <div class="formula-result">${value}</div>
-                </div>`;
-            }).join('');
-            formulaGrid.innerHTML = html;
-        }
-
         function updateZones() {
             const zones = VBT_ZONES[state.exercise];
             const { factor } = getVbtScale(state.exercise, true);
@@ -4488,7 +4617,10 @@
 
         // ============ HISTORY ============
         function loadHistory() {
-            state.history = JSON.parse(localStorage.getItem('1rm_history') || '[]');
+            state.history = normalizeHistory(readStorageJSON('1rm_history', []));
+            try {
+                localStorage.setItem('1rm_history', JSON.stringify(state.history));
+            } catch (err) {}
             renderHistory();
         }
 
@@ -4561,44 +4693,53 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const backup = JSON.parse(e.target.result);
+                    const backup = safeParseJSON(e.target.result, null);
                     
                     // Validate backup structure
-                    if (!backup || !backup.data || backup.app !== 'GUNGNIR') {
+                    if (!backup || backup.app !== 'GUNGNIR' || !backup.data || typeof backup.data !== 'object') {
                         alert('File di backup non valido');
                         return;
                     }
+
+                    const restoredHistory = normalizeHistory(backup.data.history);
+                    const restoredSchemas = normalizeCustomSchemas(backup.data.customSchemas);
+                    const ramp1 = normalizeStoredLoad(backup.data.lastRamp1);
+                    const ramp3 = normalizeStoredLoad(backup.data.lastRamp3);
                     
                     // Confirm restore
-                    const historyCount = backup.data.history?.length || 0;
-                    const schemasCount = backup.data.customSchemas?.length || 0;
+                    const historyCount = restoredHistory.length;
+                    const schemasCount = restoredSchemas.length;
                     if (!confirm(`Ripristinare il backup?\n\n- ${historyCount} calcoli in cronologia\n- ${schemasCount} schemi personalizzati\n\nI dati attuali verranno sostituiti.`)) {
                         return;
                     }
                     
                     // Restore data
-                    if (backup.data.history) {
-                        state.history = backup.data.history;
-                        localStorage.setItem('1rm_history', JSON.stringify(state.history));
-                    }
+                    state.history = restoredHistory;
+                    localStorage.setItem('1rm_history', JSON.stringify(state.history));
                     
-                    if (backup.data.customSchemas) {
-                        customSchemas.length = 0;
-                        customSchemas.push(...backup.data.customSchemas);
-                        localStorage.setItem('gungnir_custom_schemas', JSON.stringify(customSchemas));
-                        renderSavedSchemas();
-                    }
+                    customSchemas = restoredSchemas;
+                    localStorage.setItem('gungnir_custom_schemas', JSON.stringify(customSchemas));
+                    renderSavedSchemas();
                     
-                    if (backup.data.lastRamp1) {
-                        localStorage.setItem('gungnir_last_ramp1', backup.data.lastRamp1);
+                    if (ramp1 !== null) {
+                        localStorage.setItem('gungnir_last_ramp1', ramp1);
+                        lastRamp1Load = parseFloat(ramp1);
+                    } else {
+                        localStorage.removeItem('gungnir_last_ramp1');
+                        lastRamp1Load = null;
                     }
-                    if (backup.data.lastRamp3) {
-                        localStorage.setItem('gungnir_last_ramp3', backup.data.lastRamp3);
+                    if (ramp3 !== null) {
+                        localStorage.setItem('gungnir_last_ramp3', ramp3);
+                        lastRamp3Load = parseFloat(ramp3);
+                    } else {
+                        localStorage.removeItem('gungnir_last_ramp3');
+                        lastRamp3Load = null;
                     }
                     
                     // Refresh UI
                     renderHistory();
                     updateProgress();
+                    setAnchorType(currentAnchorType);
                     
                     // Feedback
                     const btn = $('restoreDataBtn');
@@ -4625,14 +4766,14 @@
             state.history.unshift({
                 id: Date.now(),
                 exercise: state.exercise,
-                variation: state.variation,
-                weight: state.weight,
+                variation: sanitizeText(state.variation, 80) || exercises[state.exercise]?.variations?.it?.[0] || '—',
+                weight: roundTo(state.weight, 1),
                 reps: state.reps,
-                rpe: state.rpe,
+                rpe: roundTo(state.rpe, 1),
                 rpeMode: state.rpeMode,
                 formula: state.formula,
-                result: state.result,
-                unit: state.unit,
+                result: roundTo(state.result, 1),
+                unit: 'kg',
                 date: new Date().toISOString()
             });
 
@@ -4946,56 +5087,125 @@
         }
 
         function renderHistory() {
+            const historyList = $('historyList');
+            const historyActions = $('historyActions');
+            if (!historyList || !historyActions) return;
+
             const filtered = state.history.filter(e => e.exercise === state.exercise);
             
             if (filtered.length === 0) {
-                $('historyList').innerHTML = `<div class="empty-state"><div class="empty-icon">NR</div><div class="empty-text">Nessun calcolo salvato</div></div>`;
-                $('historyActions').style.display = 'none';
+                historyList.innerHTML = `<div class="empty-state"><div class="empty-icon">NR</div><div class="empty-text">Nessun calcolo salvato</div></div>`;
+                historyActions.style.display = 'none';
                 return;
             }
 
-            $('historyList').innerHTML = filtered.map(e => `
-                <div class="history-item">
-                    <div class="history-info">
-                        <div class="history-exercise">${e.variation}</div>
-                        <div class="history-details">${e.weight}${e.unit} × ${e.reps} @ ${formatIntensity(e.rpe, e.rpeMode)}</div>
-                    </div>
-                    <div class="history-result">
-                        <div class="history-1rm">${e.result} ${e.unit}</div>
-                        <div class="history-date">${new Date(e.date).toLocaleDateString('it-IT')}</div>
-                    </div>
-                    <button class="history-delete" onclick="deleteFromHistory(${e.id})">×</button>
-                </div>
-            `).join('');
-            $('historyActions').style.display = 'flex';
+            historyList.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+
+            filtered.forEach(e => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+
+                const info = document.createElement('div');
+                info.className = 'history-info';
+
+                const exercise = document.createElement('div');
+                exercise.className = 'history-exercise';
+                exercise.textContent = e.variation;
+
+                const details = document.createElement('div');
+                details.className = 'history-details';
+                details.textContent = `${e.weight}${e.unit} × ${e.reps} @ ${formatIntensity(e.rpe, e.rpeMode)}`;
+
+                info.appendChild(exercise);
+                info.appendChild(details);
+
+                const result = document.createElement('div');
+                result.className = 'history-result';
+
+                const oneRm = document.createElement('div');
+                oneRm.className = 'history-1rm';
+                oneRm.textContent = `${e.result} ${e.unit}`;
+
+                const date = document.createElement('div');
+                date.className = 'history-date';
+                const parsedDate = new Date(e.date);
+                date.textContent = Number.isNaN(parsedDate.getTime()) ? '—' : parsedDate.toLocaleDateString('it-IT');
+
+                result.appendChild(oneRm);
+                result.appendChild(date);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'history-delete';
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.addEventListener('click', () => deleteFromHistory(e.id));
+
+                item.appendChild(info);
+                item.appendChild(result);
+                item.appendChild(removeBtn);
+                fragment.appendChild(item);
+            });
+
+            historyList.appendChild(fragment);
+            historyActions.style.display = 'flex';
         }
 
         // ============ PROGRESS ============
         function updateProgress() {
+            const prRecords = $('prRecords');
+            const chartContainer = $('chartContainer');
+            if (!prRecords || !chartContainer) return;
+
             const filtered = state.history.filter(e => e.exercise === state.exercise);
             
             // PR Records
             if (filtered.length === 0) {
-                $('prRecords').innerHTML = `<div class="empty-state"><div class="empty-text">Nessun record ancora</div></div>`;
+                prRecords.innerHTML = `<div class="empty-state"><div class="empty-text">Nessun record ancora</div></div>`;
             } else {
                 const best = filtered.reduce((max, e) => e.result > max.result ? e : max);
-                $('prRecords').innerHTML = `
-                    <div class="history-item">
-                        <div class="history-info">
-                            <div class="history-exercise">Miglior 1RM</div>
-                            <div class="history-details">${best.variation}</div>
-                        </div>
-                        <div class="history-result">
-                            <div class="history-1rm">${best.result} ${best.unit}</div>
-                            <div class="history-date">${new Date(best.date).toLocaleDateString('it-IT')}</div>
-                        </div>
-                    </div>
-                `;
+                prRecords.innerHTML = '';
+
+                const item = document.createElement('div');
+                item.className = 'history-item';
+
+                const info = document.createElement('div');
+                info.className = 'history-info';
+
+                const label = document.createElement('div');
+                label.className = 'history-exercise';
+                label.textContent = 'Miglior 1RM';
+
+                const variation = document.createElement('div');
+                variation.className = 'history-details';
+                variation.textContent = best.variation;
+
+                info.appendChild(label);
+                info.appendChild(variation);
+
+                const result = document.createElement('div');
+                result.className = 'history-result';
+
+                const oneRm = document.createElement('div');
+                oneRm.className = 'history-1rm';
+                oneRm.textContent = `${best.result} ${best.unit}`;
+
+                const date = document.createElement('div');
+                date.className = 'history-date';
+                const parsedDate = new Date(best.date);
+                date.textContent = Number.isNaN(parsedDate.getTime()) ? '—' : parsedDate.toLocaleDateString('it-IT');
+
+                result.appendChild(oneRm);
+                result.appendChild(date);
+
+                item.appendChild(info);
+                item.appendChild(result);
+                prRecords.appendChild(item);
             }
 
             // Chart
             if (filtered.length < 2) {
-                $('chartContainer').innerHTML = `<div class="empty-state"><div class="empty-icon">NR</div><div class="empty-text">Salva almeno 2 calcoli per vedere il grafico</div></div>`;
+                chartContainer.innerHTML = `<div class="empty-state"><div class="empty-icon">NR</div><div class="empty-text">Salva almeno 2 calcoli per vedere il grafico</div></div>`;
                 return;
             }
 
@@ -5004,7 +5214,11 @@
             const minVal = Math.min(...data.map(d => d.result));
             const range = maxVal - minVal || 1;
             const pad = { t: 20, r: 20, b: 30, l: 45 };
-            const w = $('chartContainer').clientWidth;
+            const w = Math.floor(chartContainer.clientWidth);
+            if (w < 120) {
+                chartContainer.innerHTML = `<div class="empty-state"><div class="empty-icon">NR</div><div class="empty-text">Apri la sezione Progressi per visualizzare il grafico</div></div>`;
+                return;
+            }
             const h = 200;
             const cw = w - pad.l - pad.r;
             const ch = h - pad.t - pad.b;
@@ -5017,7 +5231,7 @@
             const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
             const areaD = `${pathD} L ${pts[pts.length-1].x} ${h - pad.b} L ${pad.l} ${h - pad.b} Z`;
 
-            $('chartContainer').innerHTML = `
+            chartContainer.innerHTML = `
                 <svg class="chart-svg" viewBox="0 0 ${w} ${h}">
                     <defs>
                         <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -5102,6 +5316,9 @@
             $$('.tab-content').forEach(c => c.classList.toggle('active', c.id === tab + 'Tab'));
             // Mostra exercise tabs solo dove servono
             $('exerciseTabs').style.display = ['calculator', 'history'].includes(tab) ? 'flex' : 'none';
+            if (tab === 'history' && $('progressiSubTab')?.classList.contains('active')) {
+                requestAnimationFrame(() => updateProgress());
+            }
         }
 
         function setTrainingSubTab(subtab) {
@@ -5119,6 +5336,9 @@
             $('cronologiaSubTab').classList.toggle('active', subtab === 'cronologia');
             $('progressiSubTab').classList.toggle('active', subtab === 'progressi');
             $('obiettivoSubTab').classList.toggle('active', subtab === 'obiettivo');
+            if (subtab === 'progressi') {
+                requestAnimationFrame(() => updateProgress());
+            }
         }
 
         function setExercise(ex) {
@@ -5340,7 +5560,7 @@
         };
 
         let selectedSchema = null;
-        let customSchemas = JSON.parse(localStorage.getItem('gungnir_custom_schemas') || '[]');
+        let customSchemas = normalizeCustomSchemas(readStorageJSON('gungnir_custom_schemas', []));
 
         function scrollToSchemaOutput() {
             const card = $('schemaOutputCard');
@@ -5499,13 +5719,17 @@
                 <span style="color: var(--bianco-dim);">@</span>
                 <input type="number" class="custom-percent" placeholder="%" min="50" max="100" step="0.5">
                 <span style="color: var(--bianco-dim);">%</span>
-                <button style="padding: 0.3rem 0.5rem; background: transparent; border: 1px solid var(--error); color: var(--error); border-radius: 4px; cursor: pointer;" onclick="this.parentElement.remove()">×</button>
+                <button class="custom-row-remove" style="padding: 0.3rem 0.5rem; background: transparent; border: 1px solid var(--error); color: var(--error); border-radius: 4px; cursor: pointer;" type="button">×</button>
             `;
+            const removeBtn = row.querySelector('.custom-row-remove');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => row.remove());
+            }
             container.appendChild(row);
         }
 
         function saveCustomSchema() {
-            const name = $('customSchemaName').value.trim();
+            const name = sanitizeText($('customSchemaName').value, 60);
             if (!name) {
                 alert('Inserisci un nome per lo schema');
                 return;
@@ -5515,13 +5739,12 @@
             const sets = [];
             
             rows.forEach(row => {
-                const setsVal = parseInt(row.querySelector('.custom-sets').value);
-                const repsVal = parseInt(row.querySelector('.custom-reps').value);
-                const percentVal = parseFloat(row.querySelector('.custom-percent').value);
-                
-                if (setsVal && repsVal && percentVal) {
-                    sets.push({ sets: setsVal, reps: repsVal, percent: percentVal });
-                }
+                const normalizedSet = normalizeSchemaSet({
+                    sets: row.querySelector('.custom-sets')?.value,
+                    reps: row.querySelector('.custom-reps')?.value,
+                    percent: row.querySelector('.custom-percent')?.value
+                });
+                if (normalizedSet) sets.push(normalizedSet);
             });
             
             if (sets.length === 0) {
@@ -5537,6 +5760,7 @@
             };
             
             customSchemas.push(schema);
+            customSchemas = normalizeCustomSchemas(customSchemas);
             localStorage.setItem('gungnir_custom_schemas', JSON.stringify(customSchemas));
             
             // Reset form
@@ -6661,6 +6885,11 @@
             });
             $$('#historyTab .sub-tab').forEach(t => {
                 t.addEventListener('click', () => setHistorySubTab(t.dataset.subtab));
+            });
+            window.addEventListener('resize', () => {
+                if ($('historyTab')?.classList.contains('active') && $('progressiSubTab')?.classList.contains('active')) {
+                    updateProgress();
+                }
             });
             
             // Schema cards click

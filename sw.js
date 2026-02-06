@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gungnir-pwa-v21';
+const CACHE_NAME = 'gungnir-pwa-v22';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -31,8 +31,10 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+          if (response && response.ok && response.type === 'basic') {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+          }
           return response;
         })
         .catch(() => caches.match('./index.html'))
@@ -46,11 +48,15 @@ self.addEventListener('fetch', event => {
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then(cached => {
-        const fetchPromise = fetch(request).then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-          return response;
-        });
+        const fetchPromise = fetch(request)
+          .then(response => {
+            if (response && response.ok && response.type === 'basic') {
+              const copy = response.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => cached || Response.error());
         return cached || fetchPromise;
       })
     );
